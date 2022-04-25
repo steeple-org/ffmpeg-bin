@@ -1,0 +1,19 @@
+variables:
+  OUTPUT_FILE: steeple-imagemagick.deb
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_UPDATE_FLAGS: --jobs 4
+
+compile:
+  image: debian:latest
+  script:
+    - bash ./gen_deb.sh
+    - export VERSION=$(cat ./sources/RELEASE)
+    - echo "######################################## VERSION v$VERSION ///"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  artifacts:
+    expire_in: 7 days
+    name: steeple-imagemagick-STEEPLE_IMAGICK_VERSION
+    expose_as: steeple-imagemagick-STEEPLE_IMAGICK_VERSION
+    paths:
+      - $OUTPUT_FILE

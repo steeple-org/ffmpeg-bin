@@ -1,0 +1,6 @@
+Package: steeple-ffmpeg
+Version: 4.4.1
+Maintainer: dev@steeple.fr
+Architecture: amd64
+Description: ffmpeg steeple
+Depends: libass9, libfreetype6, libgnutls30, libmp3lame0, libsdl2-2.0-0, libva2, libvdpau1, libvorbis0a, libxcb1, libxcb-shm0, libxcb-shape0, libxcb-xfixes0, zlib1g, libsndio7.0, libxv1, libva-drm2
