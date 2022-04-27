@@ -78,7 +78,7 @@ deploy:prod:
         --request POST \
         --header "PRIVATE-TOKEN: $STEEPLE_TOKEN" \
         --data name="steeple-ffmpeg.deb" \
-        --data url="$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/steeple-ffmpeg-deb/raw$OUTPUT_FILE" \
+        --data url="$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/steeple-ffmpeg-deb/raw/$OUTPUT_FILE" \
         "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$FFMPEG_TAG/assets/links"
   cache:
     - key: ffmpeg-deb-$CI_COMMIT_SHA
