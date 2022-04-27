@@ -19,7 +19,7 @@ compile:
   script:
     - bash ./gen_deb.sh
   cache:
-    - name: ffmpge deb
+    - key: ffmpeg-deb-$CI_COMMIT_SHA
       paths:
         - $OUTPUT_FILE
 
@@ -29,6 +29,7 @@ check:develop:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'main'
   script:
     - export FFMPEG_TAG=$(cat ./sources/RELEASE)
+    - if [ -z "$FFMPEG_TAG" ]; then echo "FFMPEG_TAG is empty" && exit 1; fi
     - git checkout $FFMPEG_TAG || exit 0
     - echo "TAG \"$FFMPEG_TAG\" already exists"
     - exit 1
@@ -42,7 +43,7 @@ deploy:other:
     - export FFMPEG_TAG=$(cat ./sources/RELEASE)
     - echo "DO NOTHING"
   cache:
-    - name: ffmpge deb
+    - key: ffmpeg-deb-$CI_COMMIT_SHA
       paths:
         - $OUTPUT_FILE
   artifacts:
@@ -80,9 +81,9 @@ deploy:prod:
         --data url="$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/steeple-ffmpeg-$FFMPEG_TAG/raw$OUTPUT_FILE" \
         "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$FFMPEG_TAG/assets/links"
   cache:
-    - name: ffmpge deb
+    - key: ffmpeg-deb-$CI_COMMIT_SHA
       paths:
-      - $OUTPUT_FILE
+        - $OUTPUT_FILE
   artifacts:
     expire_in: 1 day
     name: steeple-ffmpeg-$FFMPEG_TAG
