@@ -1,19 +1,90 @@
 variables:
+  # CONFIG FOR JOBS
   OUTPUT_FILE: steeple-ffmpeg.deb
+  # CONFIG GIT
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_UPDATE_FLAGS: --jobs 4
 
+stages:
+  - compile
+  - check
+  - deploy
+
 compile:
+  stage: compile
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
   image: debian:latest
   script:
     - bash ./gen_deb.sh
-    - export VERSION=$(cat ./sources/RELEASE)
-    - echo "######################################## VERSION v$VERSION ///"
+  cache:
+    - name: ffmpge deb
+      paths:
+        - $OUTPUT_FILE
+
+check:develop:
+  stage: check
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'main'
+  script:
+    - export FFMPEG_TAG=$(cat ./sources/RELEASE)
+    - git checkout $FFMPEG_TAG || exit 0
+    - echo "TAG \"$FFMPEG_TAG\" already exists"
+    - exit 1
+
+deploy:other:
+  stage: deploy
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  image: debian:latest
+  script:
+    - export FFMPEG_TAG=$(cat ./sources/RELEASE)
+    - echo "DO NOTHING"
+  cache:
+    - name: ffmpge deb
+      paths:
+        - $OUTPUT_FILE
   artifacts:
     expire_in: 7 days
-    name: steeple-imagemagick-STEEPLE_IMAGICK_VERSION
-    expose_as: steeple-imagemagick-STEEPLE_IMAGICK_VERSION
+    name: steeple-ffmpeg-$FFMPEG_TAG-$CI_COMMIT_SHA
+    expose_as: steeple-ffmpeg-$FFMPEG_TAG-$CI_COMMIT_SHA
+    paths:
+      - $OUTPUT_FILE
+
+deploy:prod:
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+  image: debian:latest
+  script:
+    - apt update && apt install -y curl
+    - export FFMPEG_TAG=$(cat ./sources/RELEASE)
+    -  |
+      curl \
+        --request POST \
+        --header "PRIVATE-TOKEN: $STEEPLE_TOKEN" \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/repository/tags?tag_name=$FFMPEG_TAG&ref=main"
+    - |
+      curl \
+        --request POST \
+        --header "PRIVATE-TOKEN: $STEEPLE_TOKEN" \
+        --header 'Content-Type: application/json' \
+        --data '{ "name": "$FFMPEG_TAG", "tag_name": "$FFMPEG_TAG" }' \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases"
+    - |
+      curl \
+        --request POST \
+        --header "PRIVATE-TOKEN: $STEEPLE_TOKEN" \
+        --data name="steeple-ffmpeg.deb" \
+        --data url="$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/steeple-ffmpeg-$FFMPEG_TAG/raw$OUTPUT_FILE" \
+        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$FFMPEG_TAG/assets/links"
+  cache:
+    - name: ffmpge deb
+      paths:
+      - $OUTPUT_FILE
+  artifacts:
+    expire_in: 1 day
+    name: steeple-ffmpeg-$FFMPEG_TAG
     paths:
       - $OUTPUT_FILE
