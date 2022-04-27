@@ -48,8 +48,8 @@ deploy:other:
         - $OUTPUT_FILE
   artifacts:
     expire_in: 7 days
-    name: steeple-ffmpeg-$FFMPEG_TAG-$CI_COMMIT_SHA
-    expose_as: steeple-ffmpeg-$FFMPEG_TAG-$CI_COMMIT_SHA
+    name: steeple-ffmpeg-deb
+    expose_as: steeple-ffmpeg-deb
     paths:
       - $OUTPUT_FILE
 
@@ -78,7 +78,7 @@ deploy:prod:
         --request POST \
         --header "PRIVATE-TOKEN: $STEEPLE_TOKEN" \
         --data name="steeple-ffmpeg.deb" \
-        --data url="$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/steeple-ffmpeg-$FFMPEG_TAG/raw$OUTPUT_FILE" \
+        --data url="$CI_PROJECT_URL/-/jobs/$CI_JOB_ID/artifacts/steeple-ffmpeg-deb/raw$OUTPUT_FILE" \
         "$CI_API_V4_URL/projects/$CI_PROJECT_ID/releases/$FFMPEG_TAG/assets/links"
   cache:
     - key: ffmpeg-deb-$CI_COMMIT_SHA
@@ -86,6 +86,6 @@ deploy:prod:
         - $OUTPUT_FILE
   artifacts:
     expire_in: 1 day
-    name: steeple-ffmpeg-$FFMPEG_TAG
+    name: steeple-ffmpeg-deb
     paths:
       - $OUTPUT_FILE
