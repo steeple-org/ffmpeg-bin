@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      RELEASE_VERSION: 5.1.1
+      RELEASE_URL: https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+      RELEASE_MD5: 4cbbe32169c4ec79a0969d5c92cbcaff
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build package
+        run: bin/build
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.tar.xz
+            dist/*.tar.xz.md5

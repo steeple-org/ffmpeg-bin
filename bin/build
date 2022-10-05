@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+
+warn () {
+  echo "$@" 1>&2
+}
+
+test_vn () {
+  test -v $1 && test -n "${!1}" && return 0
+  warn "\$$1 cannot be unset or blank"
+  return 1
+}
+
+test_vn RELEASE_VERSION
+test_vn RELEASE_URL
+test_vn RELEASE_MD5
+
+RELEASE_DIR="$(pwd)/dist"
+mkdir -p RELEASE_DIR
+
+export TMPDIR="$(mktemp -d)"
+
+# The name doesn't really matter, we just need a common reference throughout the script.
+RELEASE_PATH="$TMPDIR/ffmpeg.tar.xz"
+RELEASE_MD5_PATH="$TMPDIR/ffmpeg.tar.xz.md5"
+
+echo "$RELEASE_MD5  $RELEASE_PATH" > "$RELEASE_MD5_PATH"
+
+get_release () {
+  curl \
+    --silent \
+    --show-error \
+    --output "$RELEASE_PATH" \
+    "$@"
+}
+
+verify_release () {
+  md5sum --check "$RELEASE_MD5_PATH"
+}
+
+pushd "$TMPDIR"
+
+echo "Downloading FFmpeg $RELEASE_VERSION..."
+
+if ! get_release "$RELEASE_URL"
+then
+  warn "FATAL: Couldn't get the latest release !"
+  exit 1
+fi
+
+echo "Download complete !"
+echo "Verifying FFmpeg $RELEASE_VERSION..."
+
+if ! verify_release
+then
+  warn "The latest release doesn't match the target checksum (md5: $RELEASE_MD5)."
+  warn "Please check that the latest release is: $RELEASE_VERSION"
+  warn "- if so, something went wrong during the download"
+  warn "- if not, please update the script with the latest release metadata"
+
+  exit 1
+fi
+
+echo "Verification complete !"
+
+echo "Preparing assets for release..."
+
+mv -v "$RELEASE_PATH"     "$RELEASE_DIR/ffmpeg-$RELEASE_VERSION.tar.xz"
+mv -v "$RELEASE_MD5_PATH" "$RELEASE_DIR/ffmpeg-$RELEASE_VERSION.tar.xz.md5"
+
+echo "Preparation complete !"
+
+popd
+
+rm -rf "$TMPDIR"
