@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      RELEASE_VERSION: 6.0.1
+      RELEASE_VERSION: 6.1
       RELEASE_URL: https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
-      RELEASE_MD5: 5d1efbbb3a20dfe0258d3def9c5ed049
+      RELEASE_MD5: 8a34e2ab52b72777a8dcd3ff5defbcd8
 
     steps:
       - name: Checkout code
